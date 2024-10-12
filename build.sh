@@ -9,10 +9,11 @@ pushd "$(dirname $0)"
 compiler=${CC:-g++}
 
 src_files=(
-  src/main.cxx
+	src/main.cxx
 	src/util/random.cxx
 	src/layout/layout_tree.cxx
 	src/rendering.cxx
+	src/rendering_context.cxx
 )
 
 rapidxml_version="1.13"
@@ -44,8 +45,8 @@ gl_flags=$(pkg-config --cflags --libs gl)
 
 misc_lib_flags=$(pkg-config --cflags --libs libwebp libwebpmux libwebpdemux libpng libjpeg fontconfig)
 
-common_opts="$rapidxml_flags $skia_flags $glfw_flags $gl_flags -I$root/src -Wall --std=c++20 -v -L$root/vendor/skia/out/Static -lskia -lz $misc_lib_flags"
-debug_opts="--debug --optimize -DDEBUG $common_opts"
+common_opts="$rapidxml_flags $skia_flags $glfw_flags $gl_flags -I$root/src -Wall --std=c++20 -L$root/vendor/skia/out/Static -lskia -lz $misc_lib_flags"
+debug_opts="--debug -g --optimize -DDEBUG $common_opts"
 
 mkdir -p build
 pushd build >> /dev/null

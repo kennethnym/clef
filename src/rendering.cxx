@@ -4,25 +4,14 @@
 #include "include/core/SkFont.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkRect.h"
-#include "include/core/SkSurfaceProps.h"
+#include "include/core/SkRefCnt.h"
+#include "include/ports/SkFontMgr_directory.h"
 #include "layout/layout_tree.hxx"
-#include <cstdint>
 #include <iostream>
-#include <limits>
 #include <utility>
 
 inline const auto NODE_TYPE_BOX = "box";
 inline const auto NODE_TYPE_TEXT = "text";
-
-Clef::RenderingContext new_rendering_context(SkCanvas *canvas,
-											 sk_sp<SkFontMgr> font_mgr) {
-	return {
-		.canvas = canvas,
-		.layout_map{},
-		.font_mgr = font_mgr,
-		.random_id{0, std::numeric_limits<uint64_t>::max()},
-	};
-}
 
 Clef::LayoutBound __calculate_node_position(Clef::RenderingContext &ctx,
 											Clef::LayoutTree::Node *node) {
@@ -60,8 +49,6 @@ void clef_render_node(Clef::RenderingContext &ctx,
 		auto tn = static_cast<Clef::TextNode *>(node);
 		SkPaint paint;
 		paint.setColor(SK_ColorBLACK);
-		std::cout << "rendering text: " << tn->content << " at x = " << pos.x
-				  << " y = " << pos.y << std::endl;
 		ctx.canvas->drawString(tn->content.c_str(), pos.x, pos.y + pos.height,
 							   tn->font, paint);
 		ctx.layout_map.insert({node->id, pos});

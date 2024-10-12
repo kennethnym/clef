@@ -6,6 +6,7 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkTypeface.h"
 #include "rapidxml.hpp"
+#include "rendering.hxx"
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -32,8 +33,6 @@ Clef::LayoutBound Clef::ContainerNode::measure() {
 	float total_height = 0;
 	for (const auto &child : children) {
 		const auto bound = child->measure();
-		std::cout << "bound width" << bound.width << " height " << bound.height
-				  << std::endl;
 		if (bound.width > max_child_width) {
 			max_child_width = bound.width;
 		}
@@ -60,8 +59,8 @@ Clef::LayoutBound Clef::TextNode::measure() {
 Clef::LayoutTree::LayoutTree(Clef::LayoutTree::Node *root) : root(root) {}
 
 Clef::LayoutTree::Node *
-Clef::LayoutTree::Node::from_xml_node(rapidxml::xml_node<char> *node,
-									  const SkFontMgr &font_mgr) {
+Clef::LayoutTree::Node::from_xml_node(const RenderingContext &ctx,
+									  rapidxml::xml_node<char> *node) {
 	std::cout << "encountered node:" << node->name() << std::endl;
 
 	if (std::strncmp("box", node->name(), 3) == 0) {
@@ -70,10 +69,10 @@ Clef::LayoutTree::Node::from_xml_node(rapidxml::xml_node<char> *node,
 
 		std::cout << "assigned id " << container_node->id << std::endl;
 		auto current_node = node->first_node();
-		Node *last_node;
+		Node *last_node = nullptr;
 
 		while (current_node) {
-			auto n = Node::from_xml_node(current_node, font_mgr);
+			auto n = Node::from_xml_node(ctx, current_node);
 			if (!n) {
 				return nullptr;
 			}
@@ -102,7 +101,7 @@ Clef::LayoutTree::Node::from_xml_node(rapidxml::xml_node<char> *node,
 		}
 
 		auto typeface =
-			font_mgr.matchFamilyStyle("Inter", SkFontStyle::Normal());
+			ctx.font_mgr->matchFamilyStyle("Inter", SkFontStyle::Normal());
 		SkFont f(typeface, 20);
 
 		auto n = new TextNode(content, f);
@@ -116,8 +115,9 @@ Clef::LayoutTree::Node::from_xml_node(rapidxml::xml_node<char> *node,
 	return nullptr;
 }
 
-Clef::LayoutTree Clef::LayoutTree::from_xml(const rapidxml::xml_document<> &doc,
-											const SkFontMgr &font_mgr) {
+Clef::LayoutTree
+Clef::LayoutTree::from_xml(const RenderingContext &ctx,
+						   const rapidxml::xml_document<> &doc) {
 	Clef::LayoutTree::Node *root;
 
 	auto xml_root = doc.first_node("box");
@@ -126,7 +126,7 @@ Clef::LayoutTree Clef::LayoutTree::from_xml(const rapidxml::xml_document<> &doc,
 			"cml layout must start with a container node.");
 	}
 
-	root = Node::from_xml_node(xml_root, font_mgr);
+	root = Node::from_xml_node(ctx, xml_root);
 	if (!root) {
 		throw std::runtime_error("failed to parse cml");
 	}

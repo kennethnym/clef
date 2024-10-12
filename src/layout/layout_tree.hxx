@@ -1,22 +1,16 @@
 #ifndef __CLEF_LAYOUT_LAYOUT_TREE_HXX__
 #define __CLEF_LAYOUT_LAYOUT_TREE_HXX__
 
+#include "include/core/SkColorSpace.h"
 #include "include/core/SkFont.h"
-#include "include/core/SkRefCnt.h"
-#include "include/core/SkTypeface.h"
+#include "layout_bound.hxx"
 #include "rapidxml.hpp"
+#include "rendering_context.hxx"
 #include <cstdint>
 #include <string>
 #include <vector>
 
 namespace Clef {
-
-struct LayoutBound {
-	float x;
-	float y;
-	float width;
-	float height;
-};
 
 struct LayoutTree {
 	enum class NodeType { Text, Container };
@@ -28,16 +22,16 @@ struct LayoutTree {
 		Node *next_sibiling;
 		NodeType type;
 
-		static Node *from_xml_node(rapidxml::xml_node<char> *node,
-								   const SkFontMgr &font_mgr);
+		static Node *from_xml_node(const RenderingContext &ctx,
+								   rapidxml::xml_node<char> *node);
 
 		virtual Clef::LayoutBound measure() = 0;
 	};
 
 	Node *root;
 
-	static LayoutTree from_xml(const rapidxml::xml_document<> &doc,
-							   const SkFontMgr &font_mgr);
+	static LayoutTree from_xml(const RenderingContext &ctx,
+							   const rapidxml::xml_document<> &doc);
 
   private:
 	LayoutTree(Node *root);
