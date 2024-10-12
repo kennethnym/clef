@@ -1,0 +1,4 @@
+<box>
+  <text level="1">hello from clef</text>
+  <text>this is rendered from hello.cml</text>
+</box>

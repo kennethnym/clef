@@ -1,0 +1,8 @@
+CompileFlags:
+  Add:
+    - -DSK_VULKAN
+    - -I/home/kenneth/dev/clef/vendor/rapidxml-1.13
+    - -I/home/kenneth/dev/clef/vendor/skia
+    - -I/home/kenneth/dev/clef/src
+    - -I/nix/store/dnzbfkcdc1qj805nw84xc8qpck7i8f28-glfw-3.4/include
+    - -I/nix/store/0nifpiwvav0p4nh67w5vzy3xfdy2m50g-libglvnd-1.7.0-dev/include

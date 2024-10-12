@@ -1,0 +1,9 @@
+[submodule "vendor/zig-xml"]
+	path = vendor/zig-xml
+	url = https://github.com/nektro/zig-xml
+[submodule "vendor/depot_tools"]
+	path = vendor/depot_tools
+	url = https://chromium.googlesource.com/chromium/tools/depot_tools.git
+[submodule "vendor/skia"]
+	path = vendor/skia
+	url = https://skia.googlesource.com/skia.git
