@@ -5,8 +5,8 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkTypeface.h"
+#include "layout/layout.hxx"
 #include "rapidxml.hpp"
-#include "rendering.hxx"
 #include <cstdint>
 #include <cstring>
 #include <iostream>
@@ -19,26 +19,49 @@ static std::uniform_int_distribution<std::mt19937::result_type>
 static std::random_device dev;
 static std::mt19937 rng(dev());
 
+inline const auto NODE_TYPE_BOX = "box";
+inline const auto NODE_TYPE_ROW = "row";
+inline const auto NODE_TYPE_COL = "col";
+inline const auto NODE_TYPE_TEXT = "text";
+
 uint64_t __generate_random_node_id() { return random_id(rng); };
 
-Clef::ContainerNode::ContainerNode() {
+Clef::BoxNode::BoxNode() : orientation(Orientation::Vertical) {
 	prev_sibiling = nullptr;
 	next_sibiling = nullptr;
 	parent = nullptr;
-	type = Clef::LayoutTree::NodeType::Container;
+	type = Clef::LayoutTree::NodeType::Box;
 }
 
-Clef::LayoutBound Clef::ContainerNode::measure() {
-	float max_child_width = -1;
-	float total_height = 0;
-	for (const auto &child : children) {
-		const auto bound = child->measure();
-		if (bound.width > max_child_width) {
-			max_child_width = bound.width;
+Clef::LayoutBound Clef::BoxNode::measure() {
+	switch (orientation) {
+	case Orientation::Vertical: {
+
+		float max_child_width = -1;
+		float total_height = 0;
+		for (const auto &child : children) {
+			const auto bound = child->measure();
+			if (bound.width > max_child_width) {
+				max_child_width = bound.width;
+			}
+			total_height += bound.height;
 		}
-		total_height += bound.height;
+		return {0, 0, max_child_width, total_height};
 	}
-	return {0, 0, max_child_width, total_height};
+
+	case Orientation::Horizontal: {
+		float max_child_height = -1;
+		float total_width = 0;
+		for (const auto &child : children) {
+			const auto bound = child->measure();
+			if (bound.height > max_child_height) {
+				max_child_height = bound.height;
+			}
+			total_width += bound.width;
+		}
+		return {0, 0, total_width, max_child_height};
+	}
+	}
 }
 
 Clef::TextNode::TextNode(const char *content, SkFont font)
@@ -61,13 +84,17 @@ Clef::LayoutTree::LayoutTree(Clef::LayoutTree::Node *root) : root(root) {}
 Clef::LayoutTree::Node *
 Clef::LayoutTree::Node::from_xml_node(const RenderingContext &ctx,
 									  rapidxml::xml_node<char> *node) {
-	std::cout << "encountered node:" << node->name() << std::endl;
-
-	if (std::strncmp("box", node->name(), 3) == 0) {
-		auto container_node = new ContainerNode();
+	if (std::strncmp(NODE_TYPE_ROW, node->name(), 3) == 0 ||
+		std::strncmp(NODE_TYPE_COL, node->name(), 3) == 0) {
+		auto container_node = new BoxNode();
 		container_node->id = __generate_random_node_id();
 
-		std::cout << "assigned id " << container_node->id << std::endl;
+		if (std::strncmp(NODE_TYPE_ROW, node->name(), 3) == 0) {
+			container_node->orientation = Orientation::Horizontal;
+		} else {
+			container_node->orientation = Orientation::Vertical;
+		}
+
 		auto current_node = node->first_node();
 		Node *last_node = nullptr;
 
@@ -80,8 +107,6 @@ Clef::LayoutTree::Node::from_xml_node(const RenderingContext &ctx,
 			if (last_node) {
 				n->prev_sibiling = last_node;
 				last_node->next_sibiling = n;
-				std::cout << n << std::endl;
-				std::cout << last_node << std::endl;
 			}
 
 			n->parent = container_node;
@@ -94,7 +119,7 @@ Clef::LayoutTree::Node::from_xml_node(const RenderingContext &ctx,
 		return container_node;
 	}
 
-	if (std::strncmp("text", node->name(), 4) == 0) {
+	if (std::strncmp(NODE_TYPE_TEXT, node->name(), 4) == 0) {
 		const auto content = node->value();
 		if (!content) {
 			return nullptr;
@@ -120,10 +145,9 @@ Clef::LayoutTree::from_xml(const RenderingContext &ctx,
 						   const rapidxml::xml_document<> &doc) {
 	Clef::LayoutTree::Node *root;
 
-	auto xml_root = doc.first_node("box");
+	auto xml_root = doc.first_node();
 	if (!xml_root) {
-		throw std::runtime_error(
-			"cml layout must start with a container node.");
+		throw std::runtime_error("provided layout file appears to be empty.");
 	}
 
 	root = Node::from_xml_node(ctx, xml_root);

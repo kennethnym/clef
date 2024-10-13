@@ -3,6 +3,7 @@
 
 #include "include/core/SkColorSpace.h"
 #include "include/core/SkFont.h"
+#include "layout/layout.hxx"
 #include "layout_bound.hxx"
 #include "rapidxml.hpp"
 #include "rendering_context.hxx"
@@ -13,7 +14,7 @@
 namespace Clef {
 
 struct LayoutTree {
-	enum class NodeType { Text, Container };
+	enum class NodeType { Text, Box };
 
 	struct Node {
 		uint64_t id;
@@ -37,12 +38,13 @@ struct LayoutTree {
 	LayoutTree(Node *root);
 };
 
-struct ContainerNode : LayoutTree::Node {
+struct BoxNode : LayoutTree::Node {
+	Orientation orientation;
 	std::vector<Node *> children;
 
 	Clef::LayoutBound measure() override;
 
-	ContainerNode();
+	BoxNode();
 };
 
 struct TextNode : LayoutTree::Node {

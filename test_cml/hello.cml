@@ -1,4 +1,16 @@
+<import src="https://google.com/header.cml" />
+
 <box>
   <text level="1">hello from clef</text>
   <text>this is rendered from hello.cml</text>
 </box>
+
+<header content="my content" />
+
+<row id="kasjksajdkj">
+  <text level="1">hello from clef</text>
+  <text>this is rendered from hello.cml</text>
+</row>
+
+<bundle src="/app.bundle" />
+

@@ -1,0 +1,17 @@
+<meta>
+  <title>asdklasdk</title>
+  <description>askdjksajdk</description>
+
+  <!-- permission system -->
+  <permissions>
+    <filesystem description="aksdjsadjksjdk" />
+	<camera description="asldklsadk" />
+	<location description="" type="precise|approximate" />
+	<gpu />
+  </permissions>
+</meta>
+
+<text id="label" />
+
+<bundle src="./app.wasm" />
+

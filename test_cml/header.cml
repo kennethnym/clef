@@ -1,0 +1,9 @@
+<meta>
+  <fragment>
+    <name>header</header>
+	<attr type="string" name="content" />
+  </fragment>
+</meta>
+
+<text level="1" style="bold italic">{content}</text>
+

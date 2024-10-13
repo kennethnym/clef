@@ -6,12 +6,9 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "include/ports/SkFontMgr_directory.h"
+#include "layout/layout.hxx"
 #include "layout/layout_tree.hxx"
-#include <iostream>
 #include <utility>
-
-inline const auto NODE_TYPE_BOX = "box";
-inline const auto NODE_TYPE_TEXT = "text";
 
 Clef::LayoutBound __calculate_node_position(Clef::RenderingContext &ctx,
 											Clef::LayoutTree::Node *node) {
@@ -26,8 +23,21 @@ Clef::LayoutBound __calculate_node_position(Clef::RenderingContext &ctx,
 			return {0, 0, bounds.width, bounds.height};
 		}
 
+		const auto parent = node->parent;
 		const auto prev_bound = entry->second;
-		return {prev_bound.x, prev_bound.y + prev_bound.height, bounds.width,
+		if (parent->type == Clef::LayoutTree::NodeType::Box) {
+			const auto parent_box = static_cast<Clef::BoxNode *>(parent);
+			switch (parent_box->orientation) {
+			case Clef::Orientation::Vertical:
+				return {prev_bound.x, prev_bound.y + prev_bound.height,
+						bounds.width, bounds.height};
+			case Clef::Orientation::Horizontal:
+				return {prev_bound.x + prev_bound.width, prev_bound.y,
+						bounds.width, bounds.height};
+			}
+		}
+
+		return {prev_bound.x + prev_bound.width, prev_bound.y, bounds.width,
 				bounds.height};
 	}
 
@@ -55,8 +65,8 @@ void clef_render_node(Clef::RenderingContext &ctx,
 		break;
 	}
 
-	case Clef::LayoutTree::NodeType::Container: {
-		auto cn = static_cast<Clef::ContainerNode *>(node);
+	case Clef::LayoutTree::NodeType::Box: {
+		const auto box = static_cast<Clef::BoxNode *>(node);
 		const auto pos = __calculate_node_position(ctx, node);
 		SkRect rect{pos.x, pos.y, pos.x + pos.width, pos.y + pos.height};
 		SkPaint paint;
@@ -64,7 +74,7 @@ void clef_render_node(Clef::RenderingContext &ctx,
 		ctx.canvas->drawRect(rect, paint);
 		ctx.layout_map.insert({node->id, pos});
 
-		for (const auto &child : cn->children) {
+		for (const auto &child : box->children) {
 			clef_render_node(ctx, child);
 		}
 		break;

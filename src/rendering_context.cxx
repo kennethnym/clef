@@ -41,8 +41,5 @@ void Clef::update_skia_surface(Clef::RenderingContext &ctx, int width,
 		ctx.gr_direct_context.get(), ctx.render_target,
 		kBottomLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
 		SkColorSpace::MakeSRGB(), nullptr);
-	std::cout << "sk surface" << ctx.sk_surface << std::endl;
 	ctx.canvas = ctx.sk_surface->getCanvas();
-	std::cout << " kasdjkjsak" << ctx.sk_surface->getCanvas() << std::endl;
-	std::cout << "new canvas address " << ctx.canvas << std::endl;
 }
